@@ -24,12 +24,31 @@ class Game_Item:
 
 def find_combinations(primary_item, books):
     ## combination in format [book, book, book] in order to combine to item
-    combinations = {}
-    for i in range(len(books)-1): # num of brackets
-        item_copy = Game_Item(primary_item.name, primary_item.enchantments, primary_item.anvil_uses, primary_item.levels_spent)
+    combinations = {f'[]': combine_all(primary_item, books)}
+    for i in range(1, len(books)): # num of brackets
+        brackets = [0 for n in range(i)]
+        for j in range(i): # Iterate through brackets
+            for k in range(len(books)-(j+1)): # Create brackets
+                brackets[j] = k
+                item_copy = Game_Item(primary_item.name, primary_item.enchantments, primary_item.anvil_uses, primary_item.levels_spent)
+                books_copy = [Game_Item(book.name, book.enchantments, book.anvil_uses, book.levels_spent) for book in books]
+                books_copy[k].add_enchantment(books_copy[k+1], ench_data)
+                del books_copy[k+1]
+                combinations[f'{brackets}'] = combine_all(item_copy, books_copy)
+
+    return combinations
+
+def combine_all(item_copy, books):
+    for book in books:
+        item_copy.add_enchantment(book, ench_data)
+    return item_copy.levels_spent
 
 with open('data.json', 'r') as raw_data:
     ench_data = json.load(raw_data)
 
 primary_item = Game_Item('shovel', {}, 0)
-enchantments_to_add = [Game_Item('book', {'mending': 1}, 0), Game_Item('book', {'efficiency': 3}, 0)] # Enchantments as Dict with the enchantment and level, e.g {'looting': 2}
+enchantments_to_add = [Game_Item('book', {'mending': 1}, 0), Game_Item('book', {'efficiency': 3}, 0), Game_Item('book', {'unbreaking': 3}, 0), Game_Item('book', {'silk_touch': 1}, 0)] # Enchantments as Dict with the enchantment and level, e.g {'looting': 2}
+
+print(find_combinations(primary_item, enchantments_to_add))
+
+# todo: combinations, e.g abcde as well as acbde
