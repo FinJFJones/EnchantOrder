@@ -1,8 +1,7 @@
 import tkinter as tk
-from tkinter import ttk
+#from tkinter import ttk
 
 root = tk.Tk()
 root.title('Enchantment order: ')
-
-mainframe = ttk.Frame(root, padding='3 3 12 12')
-mainframe.grid(column=0, row=0)
+label = tk.Label(text='This is a test label')
+label.pack()
