@@ -1,54 +1,14 @@
-import tkinter as tk
 import json
-
-class Game_Item:
-    def __init__(self, name, enchantments, anvil_uses, levels_spent=0):
-        self.name = name
-        self.enchantments = enchantments
-        self.anvil_uses = anvil_uses
-        self.levels_spent = levels_spent
-    
-    def get_ench_level(self, enchantment):
-        return self.enchantments[enchantment] if enchantment in dict.keys(self.enchantments) else 0
-
-    def add_enchantment(self, book, ench_data):
-        total_cost = 0
-        for enchantment in book.enchantments:
-            total_cost += max(0, 1 if (book.enchantments[enchantment] == self.get_ench_level(enchantment)) and (self.get_ench_level(enchantment) != ench_data['enchants'][enchantment]['levelMax']) else book.enchantments[enchantment]-self.get_ench_level(enchantment))*ench_data['enchants'][enchantment]['weight']
-            self.enchantments[enchantment] = self.get_ench_level(enchantment)+1 if (book.enchantments[enchantment] == self.get_ench_level(enchantment)) and (self.get_ench_level(enchantment) != ench_data['enchants'][enchantment]['levelMax']) else max(book.enchantments[enchantment], self.get_ench_level(enchantment))
-
-        pu_penalty = ((2**self.anvil_uses)-1)+((2**book.anvil_uses)-1)
-        self.anvil_uses = max(self.anvil_uses, book.anvil_uses)+1
-        self.levels_spent += total_cost+pu_penalty+book.levels_spent
-        return total_cost+pu_penalty
-
-def find_combinations(primary_item, books):
-    ## combination in format [book, book, book] in order to combine to item
-    combinations = {f'[]': combine_all(primary_item, books)}
-    for i in range(1, len(books)): # num of brackets
-        brackets = [0 for n in range(i)]
-        for j in range(i): # Iterate through brackets
-            for k in range(len(books)-(j+1)): # Create brackets
-                brackets[j] = k
-                item_copy = Game_Item(primary_item.name, primary_item.enchantments, primary_item.anvil_uses, primary_item.levels_spent)
-                books_copy = [Game_Item(book.name, book.enchantments, book.anvil_uses, book.levels_spent) for book in books]
-                books_copy[k].add_enchantment(books_copy[k+1], ench_data)
-                del books_copy[k+1]
-                combinations[f'{brackets}'] = combine_all(item_copy, books_copy)
-
-    return combinations
-
-def combine_all(item_copy, books):
-    for book in books:
-        item_copy.add_enchantment(book, ench_data)
-    return item_copy.levels_spent
+import classes
+import functions
 
 with open('data.json', 'r') as raw_data:
     ench_data = json.load(raw_data)
 
-primary_item = Game_Item('shovel', {}, 0)
-enchantments_to_add = [Game_Item('book', {'mending': 1}, 0), Game_Item('book', {'efficiency': 3}, 0), Game_Item('book', {'unbreaking': 3}, 0), Game_Item('book', {'silk_touch': 1}, 0)] # Enchantments as Dict with the enchantment and level, e.g {'looting': 2}
+primary_item = classes.Game_Item('shovel', {}, 0)
+enchantments_to_add = [classes.Game_Item('book', {'mending': 1}, 0), classes.Game_Item('book', {'efficiency': 3}, 0), classes.Game_Item('book', {'unbreaking': 3}, 0), classes.Game_Item('book', {'silk_touch': 1}, 0)] # Enchantments as Dict with the enchantment and level, e.g {'looting': 2}
 
-print(find_combinations(primary_item, enchantments_to_add))
-
-# todo: combinations, e.g abcde as well as acbde
+combination = functions.find_combinations(primary_item, enchantments_to_add, ench_data)
+print(combination[0]) # Item w/ enchantments
+print(f'Books: {[book for book in functions.createBrackets(combination[1][0], combination[1][1])]}') # Show bracket locations
+print(combination[1][1]) # Brackets
